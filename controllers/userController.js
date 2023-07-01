@@ -31,6 +31,11 @@ export const signUpController = async (req, res) => {
   });
   await user.save();
 
+  res.cookie("test", "this is shte shitty value", {
+    expiresIn: "3m",
+    httpOnly: true,
+  });
+
   return res.status(200).send({
     success: true,
     message: "User created successfuly",
@@ -38,7 +43,6 @@ export const signUpController = async (req, res) => {
 };
 
 // Loging in the user
-
 export const loginController = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -49,7 +53,13 @@ export const loginController = async (req, res) => {
       });
     }
 
-    const user = await userModel.findOne({ email: email });
+    const user = await userModel.findOne({ email });
+
+    if (!user) {
+      return res
+        .status(404)
+        .send({ success: false, message: "user not found" });
+    }
 
     const match = await comparePassword(password, user.password);
     if (!match) {
@@ -59,22 +69,100 @@ export const loginController = async (req, res) => {
       });
     }
 
-    const token = await Jwt.sign({ id: user._id }, process.env.JWT_TOKEN, {
-      expiresIn: "7d",
+    const accessToken = await Jwt.sign(
+      { id: user._id },
+      process.env.JWT_Access_TOKEN,
+      {
+        expiresIn: "1m",
+      }
+    );
+    const refreshToken = await Jwt.sign(
+      { id: user._id },
+      process.env.JWT_Refresh_TOKEN,
+      {
+        expiresIn: "30m",
+      }
+    );
+
+    res.cookie("jwToken", refreshToken, {
+      httpOnly: true,
+      expiresIn: "30m",
     });
-    return res.status(200).send({
+    user.password = undefined;
+    res.status(200).send({
       success: true,
-      user: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        address: user.address,
-        role: user.role,
-      },
-      token,
+      user,
+      accessToken,
+      refreshToken,
     });
   } catch (error) {
     console.log(error, "Error in Login controller");
+  }
+};
+
+// new ACCESS and REFRESH Token
+export const refresh = async (req, res) => {
+  const cookies = req.cookies;
+  if (!cookies?.jwToken) {
+    return res.status(400).send({
+      message: "no cookie found",
+    });
+  }
+  const refreshToken = cookies?.jwToken;
+
+  const decoded = Jwt.verify(refreshToken, process.env.JWT_Refresh_TOKEN);
+
+  if (!decoded) {
+    return res.status(403).send("Invalid token");
+  }
+
+  const userId = decoded.id;
+
+  const user = await userModel.findOne({ _id: userId });
+
+  if (!user) {
+    return res.status(401).send("Invalid refresh token");
+  }
+
+  const newAccessToken = Jwt.sign(
+    { id: user._id },
+    process.env.JWT_Access_TOKEN,
+    {
+      expiresIn: "1m",
+    }
+  );
+  const newRefreshToken = Jwt.sign(
+    { id: user._id },
+    process.env.JWT_Refresh_TOKEN,
+    {
+      expiresIn: "30m",
+    }
+  );
+
+  res.cookie("jwToken", newRefreshToken, {
+    httpOnly: true,
+    expiresIn: "30m",
+  });
+  user.password = undefined;
+  res.status(200).send({
+    success: true,
+    user,
+    accessToken: newAccessToken,
+    refreshToken: newRefreshToken,
+  });
+};
+
+// LOGGING THE USER OUT
+export const logoutController = async (req, res) => {
+  try {
+    res.clearCookie("jwToken", {
+      httpOnly: true,
+    });
+    res.status(200).send({
+      success: true,
+      message: "The user logged out successfuly",
+    });
+  } catch (error) {
+    console.log(error);
   }
 };
