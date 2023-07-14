@@ -1,11 +1,21 @@
 import { comparePassword, hashpassowrd } from "../helpers/userHelper.js";
 import userModel from "../models/userModel.js";
 import Jwt from "jsonwebtoken";
+import fs from "fs";
 
 //  Creating a new user
 export const signUpController = async (req, res) => {
-  const { name, email, phone, address, password } = req.body;
-  if (!name || !email || !password || !address || !phone) {
+  const { firstName, secondName, email, phone, address, password } = req.fields;
+  const { profilePhoto } = req.files;
+  if (
+    !firstName ||
+    !secondName ||
+    !email ||
+    !phone ||
+    !address ||
+    !password ||
+    !profilePhoto
+  ) {
     return res.status(404).send({
       success: false,
       message: "something is missing",
@@ -23,18 +33,18 @@ export const signUpController = async (req, res) => {
   const newPassword = await hashpassowrd(password);
 
   const user = new userModel({
-    name: name,
+    firstName: firstName,
+    secondName: secondName,
     phone: phone,
     email: email,
     password: newPassword,
     address: address,
   });
+  if (profilePhoto) {
+    user.profilePhoto.data = fs.readFileSync(profilePhoto.path);
+    user.profilePhoto.contentType = profilePhoto.type;
+  }
   await user.save();
-
-  res.cookie("test", "this is shte shitty value", {
-    expiresIn: "3m",
-    httpOnly: true,
-  });
 
   return res.status(200).send({
     success: true,
@@ -53,7 +63,7 @@ export const loginController = async (req, res) => {
       });
     }
 
-    const user = await userModel.findOne({ email });
+    const user = await userModel.findOne({ email }).select("-profilePhoto");
 
     if (!user) {
       return res
@@ -73,20 +83,20 @@ export const loginController = async (req, res) => {
       { id: user._id },
       process.env.JWT_Access_TOKEN,
       {
-        expiresIn: "1m",
+        expiresIn: process.env.JWT_ACCESS_EXPIRY_TIME,
       }
     );
     const refreshToken = await Jwt.sign(
       { id: user._id },
       process.env.JWT_Refresh_TOKEN,
       {
-        expiresIn: "30m",
+        expiresIn: process.env.JWT_REFRESH_EXPIRY_TIME,
       }
     );
 
     res.cookie("jwToken", refreshToken, {
       httpOnly: true,
-      expiresIn: "30m",
+      expiresIn: process.env.JWT_REFRESH_EXPIRY_TIME,
     });
     user.password = undefined;
     res.status(200).send({
@@ -128,20 +138,20 @@ export const refresh = async (req, res) => {
     { id: user._id },
     process.env.JWT_Access_TOKEN,
     {
-      expiresIn: "1m",
+      expiresIn: process.env.JWT_ACCESS_EXPIRY_TIME,
     }
   );
   const newRefreshToken = Jwt.sign(
     { id: user._id },
     process.env.JWT_Refresh_TOKEN,
     {
-      expiresIn: "30m",
+      expiresIn: process.env.JWT_REFRESH_EXPIRY_TIME,
     }
   );
 
   res.cookie("jwToken", newRefreshToken, {
     httpOnly: true,
-    expiresIn: "30m",
+    expiresIn: process.env.JWT_REFRESH_EXPIRY_TIME,
   });
   user.password = undefined;
   res.status(200).send({
@@ -164,5 +174,26 @@ export const logoutController = async (req, res) => {
     });
   } catch (error) {
     console.log(error);
+  }
+};
+
+// retrieving the user profile photo...
+export const getProfilePhoto = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const profilePic = await userModel
+      .findById({ _id: id })
+      .select("profilePhoto");
+    if (profilePic.profilePhoto.data) {
+      res.set("Content-type", profilePic.profilePhoto.contentType);
+      res.status(200).send(profilePic.profilePhoto.data);
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      success: false,
+      message: "Could not get Photo",
+      error,
+    });
   }
 };

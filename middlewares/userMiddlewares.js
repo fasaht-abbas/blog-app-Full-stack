@@ -6,9 +6,6 @@ export const signInFirst = async (req, res, next) => {
       req.headers.authorization,
       process.env.JWT_Access_TOKEN,
       (err, user) => {
-        if (err && err?.message === "TokenExpiredError") {
-          return res.status(403).send("Token Expired");
-        }
         if (err) {
           return res.status(401).send("invalid token");
         }

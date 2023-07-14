@@ -1,9 +1,17 @@
 import mongoose from "mongoose";
 const userSchema = new mongoose.Schema(
   {
-    name: {
+    firstName: {
       type: String,
       required: true,
+    },
+    secondName: {
+      type: String,
+      required: true,
+    },
+    profilePhoto: {
+      data: Buffer,
+      contentType: String,
     },
     email: {
       type: String,
@@ -25,11 +33,6 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
-    refreshTokens: [
-      {
-        type: String,
-      },
-    ],
   },
   { timestamps: true }
 );
