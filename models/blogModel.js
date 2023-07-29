@@ -14,6 +14,9 @@ const blogSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    slug: {
+      type: String,
+    },
     description: {
       type: String,
       required: true,
@@ -28,6 +31,22 @@ const blogSchema = new mongoose.Schema(
         ref: "category",
       },
     ],
+    likes: [
+      {
+        type: mongoose.ObjectId,
+        ref: "user",
+      },
+    ],
+    comments: [
+      {
+        type: mongoose.ObjectId,
+        ref: "comment",
+      },
+    ],
+    views: {
+      type: Number,
+      default: 0,
+    },
     keywords: [
       {
         type: String,

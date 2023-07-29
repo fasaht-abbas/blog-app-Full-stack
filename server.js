@@ -8,7 +8,8 @@ import connectDB from "./configs/database.js";
 const app = express();
 import userRoutes from "./routes/userRoutes.js";
 import blogRoutes from "./routes/blogRoutes.js";
-import catRoutes from "./routes/catRoutes.js";
+import categoryRoutes from "./routes/categoryRoutes.js";
+import commentRoutes from "./routes/commentRoutes.js";
 dotenv.config();
 app.use(express.json());
 app.use(cookieParser());
@@ -26,7 +27,8 @@ connectDB();
 // routes integration
 app.use("/api/v1/user", userRoutes);
 app.use("/api/v1/blog", blogRoutes);
-app.use("/api/v1/cat", catRoutes);
+app.use("/api/v1/cat", categoryRoutes);
+app.use("/api/v1/comment", commentRoutes);
 //PORT
 const port = process.env.PORT || 8080;
 //REST API

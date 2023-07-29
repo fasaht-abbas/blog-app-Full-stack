@@ -1,7 +1,9 @@
 import { comparePassword, hashpassowrd } from "../helpers/userHelper.js";
 import userModel from "../models/userModel.js";
+import nodemailer from "nodemailer";
 import Jwt from "jsonwebtoken";
 import fs from "fs";
+import otpGenerator from "otp-generator";
 
 //  Creating a new user
 export const signUpController = async (req, res) => {
@@ -195,5 +197,165 @@ export const getProfilePhoto = async (req, res) => {
       message: "Could not get Photo",
       error,
     });
+  }
+};
+// generating the otp and send the otp to email
+export const generateOtpController = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await userModel.findOne({ email: email });
+    if (!user) {
+      return res.status(404).send({
+        success: false,
+        message: "Email not registered",
+      });
+    }
+    // generating the otp
+    const otp = otpGenerator.generate(6, {
+      upperCaseAlphabets: true,
+      lowerCaseAlphabets: false,
+      specialChars: false,
+      digits: true,
+    });
+
+    // saving in the user otp field
+    user.otp.token = otp;
+    user.otp.createdAt = Date.now();
+    user.otp.expiresAt = Date.now() + 300000;
+    await user.save();
+
+    // creating a nodemailer transporter for sending the mail
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_PASSWORD,
+      },
+    });
+
+    // mail options and the message to be sent
+    const mailOptions = {
+      from: process.env.GMAIL_USER,
+      to: email,
+      subject: "Verify Account request",
+      text:
+        `Hi ${user.firstName},\n\n` +
+        `We have received a request to verify your account.` +
+        `Please use the following OTP to access your accouont: ${otp}\n\n` +
+        `If you did not make this request, please ignore this email.\n\n` +
+        `Best regards,\n` +
+        `BH Blogs Team`,
+    };
+
+    transporter.sendMail(mailOptions);
+    return res.status(200).send({
+      success: true,
+      message: "Otp sent successfully",
+    });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const verifyOtpController = async (req, res) => {
+  try {
+    const { otp } = req.body;
+    const user = await userModel.findOne({
+      "otp.token": otp,
+    });
+    // finding the user
+    if (!user) {
+      return res.status(401).send({
+        success: false,
+        message: "Wrong otp",
+      });
+    }
+
+    // finding if the otp has expired
+    if (user.otp.expiresAt <= Date.now()) {
+      return res.status(403).send({
+        success: false,
+        message: "The Otp has expired",
+      });
+    }
+    // turniong the user to the verified user.
+    user.verified = true;
+    user.otp.token = "";
+    user.otp.createdAt = undefined;
+    user.otp.expiresAt = undefined;
+    await user.save();
+    return res.status(200).send({
+      success: true,
+      message: "OTP verified",
+    });
+  } catch (error) {
+    console.log(error);
+  }
+};
+// reseting the password
+export const resettingPassController = async (req, res) => {
+  try {
+    const { password, email } = req.body;
+    console.log(password);
+    const hashedNewPassword = await hashpassowrd(password);
+    const user = await userModel.findOne({ email: email });
+    console.log(hashedNewPassword);
+    user.password = hashedNewPassword;
+    await user.save();
+    return res.status(200).send({
+      success: true,
+      message: "Password changed successfully",
+    });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+// sending the mail from the contact page
+export const sendContactMessage = async (req, res) => {
+  try {
+    const { email, name, subject, message } = req.body;
+    if (!email || !name || !subject || !message) {
+      return res.status(404).send({
+        success: true,
+        message: "Some thing is missing",
+      });
+    }
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_PASSWORD,
+      },
+    });
+
+    const mailOptions1 = {
+      from: process.env.GMAIL_USER,
+      to: process.env.GMAIL_USER,
+      subject: subject,
+      text:
+        `From: ${name},\n\n` + `Email : ${email},\n\n'` + `Message: ${message}`,
+    };
+
+    const mailOptions2 = {
+      from: process.env.GMAIL_USER,
+      to: email,
+      subject: "Received Your Message",
+      text:
+        `Hi ${name},\n\n` +
+        `We have received the message you sent.` +
+        `We will get back to you as soon as possible.` +
+        `Best regards,\n` +
+        `BH Blogs Team`,
+    };
+    transporter.sendMail(mailOptions1);
+    transporter.sendMail(mailOptions2);
+
+    return res.status(200).send({
+      success: true,
+      message: "Message Sent Successfully",
+    });
+  } catch (error) {
+    console.log(error);
   }
 };

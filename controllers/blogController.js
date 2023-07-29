@@ -2,12 +2,14 @@ import blogModel from "../models/blogModel.js";
 import userModel from "../models/userModel.js";
 import categoryModel from "../models/categoryModel.js";
 import fs from "fs";
+import mongoose from "mongoose";
+import slugify from "slugify";
 
 export const newBlogController = async (req, res) => {
   try {
     const { title, description, content, keywords, userId, categories } =
       req.fields;
-    const author = await userModel.findById(userId);
+    const author = new mongoose.Types.ObjectId(userId);
     const { blogPhoto } = req.files;
     if (
       !(
@@ -25,8 +27,10 @@ export const newBlogController = async (req, res) => {
         message: "every Field is required",
       });
     }
+    const slug = slugify(title);
     const newBlog = new blogModel({
       author,
+      slug,
       title,
       description,
       content,
@@ -51,7 +55,13 @@ export const newBlogController = async (req, res) => {
 export const getPhoto = async (req, res) => {
   try {
     const { id } = req.params;
-    const photo = await blogModel.findById({ _id: id }).select("blogPhoto");
+    if (!id) {
+      return res.status(404).send({
+        success: false,
+        message: "Id is missing",
+      });
+    }
+    const photo = await blogModel.findById(id).select("blogPhoto");
     if (photo.blogPhoto.data) {
       res.set("Content-type", photo.blogPhoto.contentType);
       res.status(200).send(photo.blogPhoto.data);
@@ -76,6 +86,7 @@ export const getUserBlogsController = async (req, res) => {
       .find({ author: id })
       .sort("-createdAt")
       .populate("author")
+      .populate("likes")
       .populate("categories")
       .select("-blogPhoto");
 
@@ -94,12 +105,20 @@ export const getUserBlogsController = async (req, res) => {
 export const getSingleBlog = async (req, res) => {
   try {
     const { id } = req.params;
-    console.log(id);
+    if (!id) {
+      return res.status(400).send({
+        success: false,
+        message: "Invalid id",
+      });
+    }
     const blog = await blogModel
       .findById(id)
       .populate("author")
       .populate("categories")
+      .populate("likes")
+      .populate("comments")
       .select("-blogPhoto");
+
     return res.status(200).send({
       success: true,
       message: "This is the blog",
@@ -169,15 +188,18 @@ export const deleteBlogController = async (req, res) => {
 export const searchBlogController = async (req, res) => {
   try {
     const { key } = req.params;
+    const querry = new RegExp(key);
     const results = await blogModel
       .find({
         $or: [
-          { title: { $regex: key } },
-          { description: { $regex: key } },
-          { keywords: { $regex: key } },
+          { slug: { $regex: querry } },
+          { title: { $regex: querry } },
+          { description: { $regex: querry } },
+          { keywords: { $regex: querry } },
         ],
       })
       .populate("author")
+      .populate("likes")
       .populate("categories")
       .select("-blogPhoto");
     return res.status(200).send({
@@ -196,21 +218,169 @@ export const searchCategoryBlogs = async (req, res) => {
     if (!cid) {
       return res.status(404).send({
         success: false,
-        message: "NO ID RECEIVEC",
+        message: "NO ID RECEIVED",
       });
     }
-    console.log(cid);
     const blogs = await blogModel
       .find({
         categories: { $in: cid },
       })
       .populate("categories")
       .populate("author")
+      .populate("likes")
       .select("-blogPhoto");
     if (blogs.length <= 0) {
       console.log("NO BLOGS Found");
     }
     return res.status(200).send({ success: true, blogs });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+// handling the likes
+export const likeClickController = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { user } = req.body;
+
+    const userId = new mongoose.Types.ObjectId(user);
+
+    const foundBlog = await blogModel.findById(id);
+
+    const liked = foundBlog.likes.includes(userId);
+
+    if (!liked) {
+      const updatedBlog = await blogModel.findByIdAndUpdate(
+        id,
+        {
+          $push: { likes: userId },
+        },
+        { new: true }
+      );
+      return res.status(200).send({
+        success: true,
+        nowLiked: true,
+        message: "liked successfully",
+      });
+    } else if (liked) {
+      const updatedBlog = await blogModel.findByIdAndUpdate(
+        id,
+        {
+          $pull: { likes: userId },
+        },
+        {
+          new: true,
+        }
+      );
+      return res.status(200).send({
+        success: true,
+        nowLiked: false,
+        message: "unliked",
+      });
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const checkLiked = async (req, res) => {
+  try {
+    const { bid, uid } = req.params;
+    const foundBlog = await blogModel.findById(bid);
+
+    if (foundBlog?.likes.includes(uid)) {
+      return res.status(200).send({
+        success: true,
+        message: "checked like",
+      });
+    } else
+      return res.status(404).send({
+        success: false,
+        message: "not liked",
+      });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const allLikesControllers = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) {
+      return res.status(404).send({
+        success: false,
+        message: " No Id",
+      });
+    }
+    const foundblog = await blogModel.findById(id).populate("likes");
+    const allLikes = foundblog.likes;
+    return res.status(200).send({
+      success: true,
+      message: "these are liked users",
+      allLikes,
+    });
+  } catch (error) {
+    console.log(object);
+  }
+};
+
+export const countViewController = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const foundBlog = await blogModel.findById(id);
+    if (foundBlog) {
+      foundBlog.likes += 1;
+      foundBlog.save();
+      return res.status(200).send({
+        success: true,
+        message: "viewAdded",
+        blogView: true,
+      });
+    } else {
+      return res.status(404).send({
+        success: false,
+        message: "View not counted",
+      });
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+// co troller for the trending blogs
+
+export const trendingBlogs = async (req, res) => {
+  try {
+    const trendingBlogs = await blogModel.aggregate([
+      {
+        $project: {
+          title: 1,
+          content: 1,
+          comments: 1,
+          likes: 1,
+          views: 1,
+          totalComments: { $size: "$comments" },
+          trendingScore: {
+            $add: [
+              { $multiply: ["$views", 0.5] }, // 50% of views
+              { $multiply: ["$totalComments", 0.3] }, // 30% of comments
+              { $multiply: ["$likes", 0.2] }, // 20% of likes
+            ],
+          },
+        },
+      },
+      {
+        $sort: {
+          trendingScore: -1, // Sort in descending order based on the trending score
+        },
+      },
+    ]);
+
+    res.status(200).send({
+      success: true,
+      trendingBlogs,
+    });
   } catch (error) {
     console.log(error);
   }

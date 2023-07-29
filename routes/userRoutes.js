@@ -5,6 +5,10 @@ import {
   refresh,
   logoutController,
   getProfilePhoto,
+  generateOtpController,
+  verifyOtpController,
+  resettingPassController,
+  sendContactMessage,
 } from "../controllers/userController.js";
 import formidable from "express-formidable";
 import { signInFirst } from "../middlewares/userMiddlewares.js";
@@ -32,5 +36,14 @@ router.post("/login", loginController);
 
 //getting the photo
 router.get("/get-photo/:id", getProfilePhoto);
+
+// generating the otp
+router.post("/generate-otp", generateOtpController);
+// VERIFY the otp
+router.post("/verify-otp", verifyOtpController);
+
+router.post("/reset-password", resettingPassController);
+
+router.post("/send-message", sendContactMessage);
 
 export default router;

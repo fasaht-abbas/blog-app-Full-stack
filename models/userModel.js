@@ -29,6 +29,21 @@ const userSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    otp: {
+      token: {
+        type: String,
+      },
+      createdAt: {
+        type: Date,
+      },
+      expiresAt: {
+        type: Date,
+      },
+    },
+    verified: {
+      type: Boolean,
+      default: false,
+    },
     role: {
       type: Number,
       default: 0,

@@ -13,6 +13,5 @@ router.get("/get-cats", getCategoryController);
 
 router.delete("/delete-category/:id", categoryDelete);
 
-router.get("/get-single/:cid", singleCategoryController);
-
+router.get("/get-one/:id", singleCategoryController);
 export default router;

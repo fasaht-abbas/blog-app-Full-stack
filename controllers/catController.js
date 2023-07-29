@@ -49,8 +49,8 @@ export const getCategoryController = async (req, res) => {
 // getting the single category
 export const singleCategoryController = async (req, res) => {
   try {
-    const { cid } = req.params;
-    const category = await categoryModel.findById(cid);
+    const { id } = req.params;
+    const category = await categoryModel.findById(id);
     return res.status(200).send({
       success: true,
       category,
