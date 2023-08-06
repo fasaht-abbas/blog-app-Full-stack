@@ -15,6 +15,7 @@ import {
   searchCategoryBlogs,
   trendingBlogs,
   updateBlogController,
+  viewController,
 } from "../controllers/blogController.js";
 
 router.post("/create-blog", formidable(), newBlogController);
@@ -54,5 +55,8 @@ router.get("/all-likes/:id", allLikesControllers);
 
 //getting-trending blogs
 router.get("/trending-blogs", trendingBlogs);
+
+// View Counter controller
+router.put("/view-counter", viewController);
 
 export default router;

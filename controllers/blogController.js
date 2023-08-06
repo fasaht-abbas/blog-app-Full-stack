@@ -351,35 +351,55 @@ export const countViewController = async (req, res) => {
 // co troller for the trending blogs
 
 export const trendingBlogs = async (req, res) => {
+  // formula for finding the trending Score...
+  const findTrendingScore = (blog) => {
+    return blog.views * 0.7 + blog.comments * 0.2 + blog.likes * 0.1;
+  };
+
   try {
-    const trendingBlogs = await blogModel.aggregate([
-      {
-        $project: {
-          title: 1,
-          content: 1,
-          comments: 1,
-          likes: 1,
-          views: 1,
-          totalComments: { $size: "$comments" },
-          trendingScore: {
-            $add: [
-              { $multiply: ["$views", 0.5] }, // 50% of views
-              { $multiply: ["$totalComments", 0.3] }, // 30% of comments
-              { $multiply: ["$likes", 0.2] }, // 20% of likes
-            ],
-          },
-        },
-      },
-      {
-        $sort: {
-          trendingScore: -1, // Sort in descending order based on the trending score
-        },
-      },
-    ]);
+    const allBlogs = await blogModel.find({}).populate("author");
+
+    // adding the trending field in the Blog Model
+    const trending = await allBlogs.map((blog) => ({
+      ...blog.toObject(),
+      trendingScore: findTrendingScore(blog),
+    }));
+
+    // actual trending blogs depending upon the trending Score
+
+    const allTrendingBlogs = trending.sort(
+      (a, b) => b.trendingScore - a.trendingScore
+    );
+
+    const trendingBlogs = allTrendingBlogs.slice(0, 6);
 
     res.status(200).send({
       success: true,
       trendingBlogs,
+    });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+// viedw controller
+
+export const viewController = async (req, res) => {
+  const { blogId } = req.body;
+  try {
+    const foundBlog = await blogModel.findById(blogId);
+    if (!foundBlog) {
+      return res.status(404).send({
+        success: false,
+
+        message: "No Blog found",
+      });
+    }
+    foundBlog.views += 1;
+    await foundBlog.save();
+    return res.status(200).send({
+      success: true,
+      message: "View Counted",
     });
   } catch (error) {
     console.log(error);
