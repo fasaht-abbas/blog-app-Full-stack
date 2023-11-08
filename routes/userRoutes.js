@@ -9,6 +9,7 @@ import {
   verifyOtpController,
   resettingPassController,
   sendContactMessage,
+  updateUser,
 } from "../controllers/userController.js";
 import formidable from "express-formidable";
 import { signInFirst } from "../middlewares/userMiddlewares.js";
@@ -45,5 +46,8 @@ router.post("/verify-otp", verifyOtpController);
 router.post("/reset-password", resettingPassController);
 
 router.post("/send-message", sendContactMessage);
+
+// updating the user
+router.put("/update-user/:id", formidable(), updateUser);
 
 export default router;

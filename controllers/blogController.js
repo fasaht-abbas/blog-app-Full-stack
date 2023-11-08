@@ -114,7 +114,6 @@ export const getSingleBlog = async (req, res) => {
     const blog = await blogModel
       .findById(id)
       .populate("author")
-      .populate("categories")
       .populate("likes")
       .populate("comments")
       .select("-blogPhoto");
@@ -149,7 +148,6 @@ export const updateBlogController = async (req, res) => {
         title: title,
         description: description,
         content: content,
-        categories: categories.split(","),
         keywords: keywords.split(","),
       },
       { new: true }
@@ -351,27 +349,36 @@ export const countViewController = async (req, res) => {
 // co troller for the trending blogs
 
 export const trendingBlogs = async (req, res) => {
-  // formula for finding the trending Score...
-  const findTrendingScore = (blog) => {
-    return blog.views * 0.7 + blog.comments * 0.2 + blog.likes * 0.1;
-  };
+  // This is the formula defined for finding the trending score
+  function calculateTrendingScore(blog) {
+    const viewsWeight = 0.6;
+    const commentsWeight = 0.25;
+    const likesWeight = 0.15;
+
+    const totalWeight = viewsWeight + commentsWeight + likesWeight;
+
+    const trendingScore =
+      (blog.views * viewsWeight +
+        blog.comments.length * commentsWeight +
+        blog.likes.length * likesWeight) /
+      totalWeight;
+
+    return trendingScore;
+  }
 
   try {
-    const allBlogs = await blogModel.find({}).populate("author");
+    const blogs = await blogModel.find({}).populate("author");
 
-    // adding the trending field in the Blog Model
-    const trending = await allBlogs.map((blog) => ({
+    // Calculate the trending score for each blog
+    const blogsWithTrendingScores = blogs.map((blog) => ({
       ...blog.toObject(),
-      trendingScore: findTrendingScore(blog),
+      trendingScore: calculateTrendingScore(blog),
     }));
 
-    // actual trending blogs depending upon the trending Score
-
-    const allTrendingBlogs = trending.sort(
+    // Sort the blogs based on their trending scores in descending order
+    const trendingBlogs = blogsWithTrendingScores.sort(
       (a, b) => b.trendingScore - a.trendingScore
     );
-
-    const trendingBlogs = allTrendingBlogs.slice(0, 6);
 
     res.status(200).send({
       success: true,

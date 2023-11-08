@@ -4,6 +4,7 @@ import nodemailer from "nodemailer";
 import Jwt from "jsonwebtoken";
 import fs from "fs";
 import otpGenerator from "otp-generator";
+import mongoose from "mongoose";
 
 //  Creating a new user
 export const signUpController = async (req, res) => {
@@ -115,7 +116,7 @@ export const loginController = async (req, res) => {
 // new ACCESS and REFRESH Token
 export const refresh = async (req, res) => {
   const cookies = req.cookies;
-  if (!cookies?.jwToken) {
+  if (!cookies.jwToken) {
     return res.status(400).send({
       message: "no cookie found",
     });
@@ -278,7 +279,7 @@ export const verifyOtpController = async (req, res) => {
         message: "The Otp has expired",
       });
     }
-    // turniong the user to the verified user.
+    // turning the user to the verified user.
     user.verified = true;
     user.otp.token = "";
     user.otp.createdAt = undefined;
@@ -354,6 +355,56 @@ export const sendContactMessage = async (req, res) => {
     return res.status(200).send({
       success: true,
       message: "Message Sent Successfully",
+    });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+// making the user return
+export const updateUser = async (req, res) => {
+  try {
+    //here goes the controller....updating logic
+    const { firstName, secondName, address, phone, password, email } =
+      req.fields;
+    if (!password) {
+      return res.status(404).send({
+        success: false,
+        message: "Password is required",
+      });
+    }
+
+    const { profilePhoto } = req.files;
+    const { id } = req.params;
+    const user = await userModel.findById(id);
+    const match = await comparePassword(password, user.password);
+    if (!match) {
+      return res.status(400).send({
+        success: false,
+        message: "The passeord is wrong",
+      });
+    }
+    const updated = await userModel.findOneAndUpdate(
+      user._id,
+      {
+        firstName: firstName,
+        secondName: secondName,
+        phone: phone,
+        emial: email,
+        address: address,
+      },
+      { new: true }
+    );
+    // here updated is the user which is being updated
+    if (profilePhoto) {
+      updated.profilePhoto.data = fs.readFileSync(profilePhoto.path);
+      updated.profilePhoto.contentType = profilePhoto.type;
+    }
+    await updated.save();
+    updated.password = undefined;
+    return res.status(200).send({
+      success: true,
+      updated,
     });
   } catch (error) {
     console.log(error);
