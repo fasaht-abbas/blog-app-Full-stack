@@ -347,25 +347,22 @@ export const countViewController = async (req, res) => {
 };
 
 // co troller for the trending blogs
+function calculateTrendingScore(blog) {
+  const viewsWeight = 0.6;
+  const commentsWeight = 0.25;
+  const likesWeight = 0.15;
 
+  const totalWeight = viewsWeight + commentsWeight + likesWeight;
+
+  const trendingScore =
+    (blog.views * viewsWeight +
+      blog.comments.length * commentsWeight +
+      blog.likes.length * likesWeight) /
+    totalWeight;
+
+  return trendingScore;
+}
 export const trendingBlogs = async (req, res) => {
-  // This is the formula defined for finding the trending score
-  function calculateTrendingScore(blog) {
-    const viewsWeight = 0.6;
-    const commentsWeight = 0.25;
-    const likesWeight = 0.15;
-
-    const totalWeight = viewsWeight + commentsWeight + likesWeight;
-
-    const trendingScore =
-      (blog.views * viewsWeight +
-        blog.comments.length * commentsWeight +
-        blog.likes.length * likesWeight) /
-      totalWeight;
-
-    return trendingScore;
-  }
-
   try {
     const blogs = await blogModel.find({}).populate("author");
 
