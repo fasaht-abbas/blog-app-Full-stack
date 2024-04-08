@@ -5,13 +5,9 @@ import {
   Box,
   Toolbar,
   Stack,
-  Divider,
   Avatar,
   Modal,
-  Fade,
   Grow,
-  Collapse,
-  Backdrop,
   Grid,
   Menu,
   MenuItem,
@@ -19,7 +15,6 @@ import {
   IconButton,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
-import Logo from "../../assets/logo.svg";
 import { useAuth } from "../../Context/AuthContext";
 import { StyledNavLink, subHeadingTypo } from "../StyledComponents";
 import { useState } from "react";

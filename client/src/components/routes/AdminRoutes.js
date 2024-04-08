@@ -5,11 +5,10 @@ import { useState, useEffect } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import Spinner from "../Spinners/Spinner";
 import Unauthorized from "../Spinners/Unauthorized";
-import { toast } from "react-hot-toast";
 
 export const AdminPrivate = () => {
   const navigate = useNavigate();
-  const [auth, setAuth] = useAuth();
+  const [auth] = useAuth();
   const [ok, setOk] = useState(false);
   const [loading, setLoading] = useState(false);
   const axiosPrivate = CreatePrivateInstance();

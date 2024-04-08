@@ -1,16 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import {
-  Box,
-  Card,
-  Typography,
-  Grid,
-  CardActionArea,
-  CardContent,
-  CardMedia,
-  Button,
-} from "@mui/material";
-import toast from "react-hot-toast";
+import { Box, Typography, Grid, Button } from "@mui/material";
+
 import { useNavigate } from "react-router-dom";
 import { headingTypo } from "../../components/StyledComponents";
 

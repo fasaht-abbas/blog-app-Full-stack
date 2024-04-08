@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import LayoutWrapper from "../../components/Layout/LayoutWrapper";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import toast from "react-hot-toast";
 import { useAuth } from "../../Context/AuthContext";
 import Spinner from "../../components/Spinners/Spinner";
@@ -62,7 +61,7 @@ const UpdateProfile = () => {
           withCredentials: true,
         }
       );
-      if (data?.success == true) {
+      if (data?.success === true) {
         toast.success(data?.message, {
           duration: 3000,
         });
@@ -77,7 +76,7 @@ const UpdateProfile = () => {
         setPassword("");
         setEmail("");
         navigate("/private/user-profile");
-      } else if (data.success == false) {
+      } else if (data.success === false) {
         console.log(data?.message);
         setLoading(false);
         toast.error(data?.message);

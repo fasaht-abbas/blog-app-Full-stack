@@ -1,6 +1,5 @@
 import { Box, Typography, Grid } from "@mui/material";
 import axios from "axios";
-import toast from "react-hot-toast";
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../Context/AuthContext";
 import { StyledFooterLink } from "../StyledComponents";

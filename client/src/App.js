@@ -32,7 +32,7 @@ function App() {
       <Route path="/read-blog/:id" element={<ReadBlog />} />
       <Route path="/category-filter/:id" element={<CategoryFilteredBlogs />} />
       <Route path="/verify-email" element={<VerifyEmail />} />
-      //Private Routes
+
       <Route path="/private" element={<Privates />}>
         <Route path="create-blog" element={<CreateBlog />} />
         <Route path="all-blogs" element={<AllBlogs />} />
@@ -40,7 +40,7 @@ function App() {
         <Route path="user-profile" element={<UserProfile />} />
         <Route path="update-profile" element={<UpdateProfile />} />
       </Route>
-      //Admin Routes
+
       <Route path="/admin" element={<AdminPrivate />}>
         <Route path="create-category" element={<CreateCategories />} />
       </Route>

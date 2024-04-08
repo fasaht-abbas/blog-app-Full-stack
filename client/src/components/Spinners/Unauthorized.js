@@ -6,7 +6,7 @@ import { useAuth } from "../../Context/AuthContext";
 import toast from "react-hot-toast";
 const Unauthorized = () => {
   const navigate = useNavigate();
-  const [auth, setAuth] = useAuth();
+  const [auth] = useAuth();
   const [count, setCount] = useState(3);
   const location = useLocation;
 

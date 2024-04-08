@@ -1,11 +1,9 @@
 import React, { useEffect } from "react";
 import LayoutWrapper from "../../components/Layout/LayoutWrapper";
-import { Button, Grid, Stack, Typography } from "@mui/material";
-import { headingTypo } from "../../components/StyledComponents";
+import { Grid, Stack, Typography } from "@mui/material";
 import { useAuth } from "../../Context/AuthContext";
 import EditIcon from "@mui/icons-material/Edit";
 import { Link } from "react-router-dom";
-import { refreshing } from "../../components/Utlis";
 
 const UserProfile = () => {
   const [auth] = useAuth();

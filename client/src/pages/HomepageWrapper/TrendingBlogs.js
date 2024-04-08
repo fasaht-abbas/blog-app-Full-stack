@@ -2,16 +2,12 @@ import React, { useEffect, useState } from "react";
 import Carousel from "react-multi-carousel";
 import "react-multi-carousel/lib/styles.css";
 import {
-  useMediaQuery,
   Box,
   Card,
   CardContent,
   CardHeader,
-  CardMedia,
   Grid,
-  IconButton,
   Typography,
-  Paper,
   Button,
   Avatar,
   Stack,

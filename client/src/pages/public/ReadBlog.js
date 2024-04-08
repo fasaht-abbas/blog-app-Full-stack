@@ -51,7 +51,6 @@ const ReadBlog = () => {
   const [selected, setSelected] = useState("");
   const [liked, setLiked] = useState(false);
   const [showLikes, setShowLikes] = useState(false);
-  const [views, setViews] = useState("");
 
   //getting the blog
   const getBlog = async () => {
@@ -65,7 +64,6 @@ const ReadBlog = () => {
         setBlog(data?.blog);
         setAllComments(data?.blog?.comments);
         setAllLikes(data?.blog?.likes);
-        setViews(data?.views);
         getAllComments();
       }
     } catch (error) {
@@ -76,7 +74,7 @@ const ReadBlog = () => {
 
   useEffect(() => {
     getBlog();
-  }, [auth?.accessToken && auth?.accessToken != undefined]);
+  }, [auth?.accessToken && auth?.accessToken !== undefined]);
 
   // getting all the comments
   const getAllComments = async () => {

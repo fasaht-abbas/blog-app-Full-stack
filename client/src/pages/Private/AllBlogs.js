@@ -9,7 +9,6 @@ import {
   CardHeader,
   Typography,
   IconButton,
-  Modal,
   Box,
   DialogContent,
   DialogContentText,

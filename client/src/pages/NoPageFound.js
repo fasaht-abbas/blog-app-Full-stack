@@ -1,6 +1,5 @@
 import React from "react";
 import { Grid, Typography } from "@mui/material";
-import LayoutWrapper from "../components/Layout/LayoutWrapper";
 
 const NoPageFound = () => {
   return (

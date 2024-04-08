@@ -2,40 +2,18 @@ import React, { useState } from "react";
 import slugify from "slugify";
 import LayoutWrapper from "../../components/Layout/LayoutWrapper";
 import {
-  Box,
   Grid,
   InputAdornment,
   TextField,
   IconButton,
   Typography,
-  CardMedia,
-  Card,
-  CardHeader,
-  CardContent,
-  Button,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
-import axios from "axios";
-import Spinner from "../../components/Spinners/Spinner";
-import parse from "html-react-parser";
 import { useNavigate } from "react-router-dom";
-import { Link } from "react-router-dom";
 
 const Search = () => {
   const navigate = useNavigate();
   const [key, setKey] = useState("");
-  const [searchedBlogs, setSearchedBlogs] = useState([]);
-  const [loading, setLoading] = useState(false);
-
-  const getBlogs = async () => {
-    try {
-      const { data } = await axios.get(
-        `${process.env.REACT_APP_API}/api/v1/blog/get`
-      );
-    } catch (error) {
-      console.log(error);
-    }
-  };
 
   return (
     <LayoutWrapper title="Search Blogs">

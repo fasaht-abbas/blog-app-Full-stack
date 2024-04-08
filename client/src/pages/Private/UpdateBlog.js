@@ -8,8 +8,6 @@ import {
   IconButton,
   InputAdornment,
   Button,
-  Card,
-  CardMedia,
 } from "@mui/material";
 import React, { useState, useEffect, useRef } from "react";
 import JoditEditor from "jodit-react";
@@ -17,7 +15,6 @@ import LayoutWrapper from "../../components/Layout/LayoutWrapper";
 import axios from "axios";
 import toast from "react-hot-toast";
 import AddIcon from "@mui/icons-material/Add";
-import DeleteIcon from "@mui/icons-material/Delete";
 import CreatePrivateInstance from "../../components/AxiosInstance";
 import { useAuth } from "../../Context/AuthContext";
 import { useNavigate, useParams } from "react-router-dom";
@@ -73,7 +70,7 @@ const UpdateBlog = () => {
   };
   // deleting the keyword
   const deleteKeyword = (k) => {
-    const filtered = keywords.filter((element) => element != k);
+    const filtered = keywords.filter((element) => element !== k);
     setKeywords(filtered);
   };
 

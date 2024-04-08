@@ -1,14 +1,6 @@
-import {
-  Button,
-  Card,
-  Typography,
-  styled,
-  Modal,
-  IconButton,
-} from "@mui/material";
-import theme from "./Theme";
+import { styled } from "@mui/material";
+
 import { Link } from "react-router-dom";
-import { pink } from "@mui/material/colors";
 
 // styled links for the navigtion bar
 export const StyledNavLink = styled(Link)(({ theme }) => ({
